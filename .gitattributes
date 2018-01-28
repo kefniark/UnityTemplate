@@ -1,0 +1,45 @@
+# Source: https://gist.github.com/dpalomar/ebc64d6f56cfc25a3e5c20fe7cdfbd4f
+
+# Handle line endings automatically for files detected as text
+# and leave all files detected as binary untouched.
+* text=auto
+
+# Windows Files
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.csproj text eol=crlf
+*.sln text eol=crlf
+*.DotSettings text eol=crlf
+*.csproj text eol=crlf
+
+# Force the following filetypes to have unix eols, so Windows does not break them
+*.cs text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+*.sh text eol=lf
+*.bash text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.csv text eol=lf
+*.xml text eol=lf
+*.yml text eol=lf
+*.xsd text eol=lf
+*.css text eol=lf
+*.htm text eol=lf
+*.html text eol=lf
+
+# Unity Text Assets (-diff to autocollapse)
+*.unity text eol=lf
+*.asset text eol=lf -diff
+*.prefab text eol=lf -diff
+*.meta text eol=lf -diff
+*.mat text eol=lf -diff
+*.anim text eol=lf -diff
+*.shader text eol=lf -diff
+
+# Unity file auto collapse
+*.controller binary -diff
+*.playable binary -diff
+*.terrain binary -diff
+*.exr binary -diff
