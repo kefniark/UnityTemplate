@@ -1,251 +1,266 @@
-﻿using System;
+using System;
 
 namespace Utils.EventManager.Tools
 {
-    public static class PatternMatch
-    {
-        public static bool IsMatch(string mask, string full) => IsRegexMatch(full, mask);
+	public static class PatternMatch
+	{
+		public static bool IsMatch(string mask, string full) => IsRegexMatch(full, mask);
 
-        #region Regexp 
+		#region Regexp 
 
-        private const char any = '?';
-        private const char wild = '*';
+		private const char Any = '?';
+		private const char Wild = '*';
 
-        private const char bracketStart = '[';
-        private const char bracketEnd = ']';
-        private const char hyphen = '-';
+		private const char BracketStart = '[';
+		private const char BracketEnd = ']';
+		private const char Hyphen = '-';
 
-        private const int numeric09 = 1;
-        private const int numeric19 = 2;
-        private const int upper = 4;
-        private const int lower = 8;
+		private const int Numeric09 = 1;
+		private const int Numeric19 = 2;
+		private const int Upper = 4;
+		private const int Lower = 8;
 
-        private static bool IsRegexMatch(string input, string pattern)
-        {
-            // 同一文字列ならtrue
-            if (pattern == input) return true;
+		private static bool IsRegexMatch(string input, string pattern)
+		{
+			// 同一文字列ならtrue
+			if (pattern == input)
+			{
+				return true;
+			}
 
-            // フォーマットがなければアウト
-            if (pattern == string.Empty) return false;
+			// フォーマットがなければアウト
+			if (pattern == string.Empty)
+			{
+				return false;
+			}
 
-            // テキストが空の時はワイルドだけ認める
-            if (input == string.Empty) return IsTailAllWild(pattern, 0);
+			// テキストが空の時はワイルドだけ認める
+			if (input == string.Empty)
+			{
+				return IsTailAllWild(pattern, 0);
+			}
 
-            // フォーマットがワイルドならガバガバ
-            if (IsTailAllWild(pattern, 0)) return true;
+			// フォーマットがワイルドならガバガバ
+			if (IsTailAllWild(pattern, 0))
+			{
+				return true;
+			}
 
-            var patternIndex = 0;
-            var inputIndex = 0;
-            var filter = 0;
+			var patternIndex = 0;
+			var inputIndex = 0;
+			var filter = 0;
 
-            while (patternIndex < pattern.Length)
-            {
-                // [x-y]のパターンかもしれない
-                if (patternIndex + 4 < pattern.Length && pattern[patternIndex + 2] == hyphen)
-                {
-                    // フィルタが既にあるか、[で始まっているならそいつはフィルタである
-                    if (filter != 0 || pattern[patternIndex] == bracketStart)
-                    {
-                        // 最低でも5つ先までないと文法的にアウト
-                        if (patternIndex + 5 >= pattern.Length)
-                        {
-                            throw new IndexOutOfRangeException();
-                        }
+			while (patternIndex < pattern.Length)
+			{
+				// [x-y]のパターンかもしれない
+				if (patternIndex + 4 < pattern.Length && pattern[patternIndex + 2] == Hyphen)
+				{
+					// フィルタが既にあるか、[で始まっているならそいつはフィルタである
+					if (filter != 0 || pattern[patternIndex] == BracketStart)
+					{
+						// 最低でも5つ先までないと文法的にアウト
+						if (patternIndex + 5 >= pattern.Length)
+						{
+							throw new IndexOutOfRangeException();
+						}
 
-                        // フィルタのパターンを減らして楽をする
-                        if (pattern[patternIndex + 1] == '0' && pattern[patternIndex + 3] == '9')
-                        {
-                            filter |= numeric09;
-                        }
-                        else if (pattern[patternIndex + 1] == '1' && pattern[patternIndex + 3] == '9')
-                        {
-                            filter |= numeric19;
-                        }
-                        else if (pattern[patternIndex + 1] == 'A' && pattern[patternIndex + 3] == 'Z')
-                        {
-                            filter |= upper;
-                        }
-                        else if (pattern[patternIndex + 1] == 'a' && pattern[patternIndex + 3] == 'z')
-                        {
-                            filter |= lower;
-                        }
-                        else
-                        {
-                            throw new NotImplementedException();
-                        }
-                            
+						// フィルタのパターンを減らして楽をする
+						if (pattern[patternIndex + 1] == '0' && pattern[patternIndex + 3] == '9')
+						{
+							filter |= Numeric09;
+						}
+						else if (pattern[patternIndex + 1] == '1' && pattern[patternIndex + 3] == '9')
+						{
+							filter |= Numeric19;
+						}
+						else if (pattern[patternIndex + 1] == 'A' && pattern[patternIndex + 3] == 'Z')
+						{
+							filter |= Upper;
+						}
+						else if (pattern[patternIndex + 1] == 'a' && pattern[patternIndex + 3] == 'z')
+						{
+							filter |= Lower;
+						}
+						else
+						{
+							throw new NotImplementedException();
+						}
 
-                        // ]で閉じられてる
-                        if (pattern[patternIndex + 4] == bracketEnd)
-                        {
-                            patternIndex += 5;
-                        }
-                        // [a-bc-d]みたいな感じ
-                        else if (patternIndex + 7 < pattern.Length && pattern[patternIndex + 5] == hyphen)
-                        {
-                            patternIndex += 3;
-                        }
-                        else
-                        {
-                            throw new NotImplementedException();
-                        }
-                            
 
-                        continue;
-                    }
-                }
+						// ]で閉じられてる
+						if (pattern[patternIndex + 4] == BracketEnd)
+						{
+							patternIndex += 5;
+						}
 
-                // 同じ文字 or 単一文字
-                if (pattern[patternIndex] == input[inputIndex] || pattern[patternIndex] == any)
-                {
-                    if (filter != 0 && !Filter(input[inputIndex], filter))
-                    {
-                        return false;
-                    }
+						// [a-bc-d]みたいな感じ
+						else if (patternIndex + 7 < pattern.Length && pattern[patternIndex + 5] == Hyphen)
+						{
+							patternIndex += 3;
+						}
+						else
+						{
+							throw new NotImplementedException();
+						}
 
-                    ++patternIndex;
-                    ++inputIndex;
 
-                    if (inputIndex == input.Length)
-                    {
-                        return IsTailAllWild(pattern, patternIndex);
-                    }
+						continue;
+					}
+				}
 
-                    filter = 0;
-                    continue;
-                }
+				// 同じ文字 or 単一文字
+				if (pattern[patternIndex] == input[inputIndex] || pattern[patternIndex] == Any)
+				{
+					if (filter != 0 && !Filter(input[inputIndex], filter))
+					{
+						return false;
+					}
 
-                // ワイルドカード
-                if (pattern[patternIndex] == wild)
-                {
-                    // 末尾までワイルドだけ
-                    if (IsTailAllWild(pattern, patternIndex))
-                    {
-                        // フィルタがないならtrue
-                        if (filter == 0)
-                        {
-                            return true;
-                        }
+					++patternIndex;
+					++inputIndex;
 
-                        // フィルタがあるならfalseなものがないか検索
-                        for (var i = inputIndex; i < input.Length; ++i)
-                        {
-                            if (!Filter(input[i], filter))
-                            {
-                                return false;
-                            }
-                        }
-                        return true;
-                    }
+					if (inputIndex == input.Length)
+					{
+						return IsTailAllWild(pattern, patternIndex);
+					}
 
-                    // ワイルド以外に語尾がある時
-                    if (patternIndex < pattern.Length - 1)
-                    {
-                        // 移動させたテキスト量
-                        var shifted = 0;
+					filter = 0;
+					continue;
+				}
 
-                        while (inputIndex + shifted < input.Length)
-                        {
-                            // フィルタを見るもじゃ
-                            if (filter != 0 && !Filter(input[inputIndex + shifted], filter))
-                            {
-                                return false;
-                            }
+				// ワイルドカード
+				if (pattern[patternIndex] == Wild)
+				{
+					// 末尾までワイルドだけ
+					if (IsTailAllWild(pattern, patternIndex))
+					{
+						// フィルタがないならtrue
+						if (filter == 0)
+						{
+							return true;
+						}
 
-                            // ワイルドの次の文字と一致する文字がある（or続いている）ときの処理
-                            if (pattern[patternIndex + 1] == input[inputIndex + shifted]
-                                || pattern[patternIndex + 1] == any)
-                            {
-                                ++shifted;
+						// フィルタがあるならfalseなものがないか検索
+						for (int i = inputIndex; i < input.Length; ++i)
+						{
+							if (!Filter(input[i], filter))
+							{
+								return false;
+							}
+						}
 
-                                // 最後まで同じ文字じゃったな…
-                                if (inputIndex + shifted == input.Length)
-                                {
-                                    return true;
-                                }
+						return true;
+					}
 
-                                // 違う文字がきたらbreakなのじゃ
-                                if (pattern[patternIndex + 1] != input[inputIndex + shifted] && pattern[patternIndex + 1] != any)
-                                {
-                                    ++patternIndex;
-                                    inputIndex += shifted - 1;
-                                    break;
-                                }
+					// ワイルド以外に語尾がある時
+					if (patternIndex < pattern.Length - 1)
+					{
+						// 移動させたテキスト量
+						var shifted = 0;
 
-                                // 同じ文字がまだまだ続く
-                                if (inputIndex + shifted < input.Length)
-                                {
-                                    continue;
-                                }
-                            }
+						while (inputIndex + shifted < input.Length)
+						{
+							// フィルタを見るもじゃ
+							if (filter != 0 && !Filter(input[inputIndex + shifted], filter))
+							{
+								return false;
+							}
 
-                            // ワイルドの次の文字と違う文字の場合は素直にその次へ
-                            ++shifted;
+							// ワイルドの次の文字と一致する文字がある（or続いている）ときの処理
+							if (pattern[patternIndex + 1] == input[inputIndex + shifted]
+								|| pattern[patternIndex + 1] == Any)
+							{
+								++shifted;
 
-                            // 最後まで違う文字じゃったな…
-                            if (inputIndex + shifted == input.Length)
-                            {
-                                return false;
-                            }
-                        }
+								// 最後まで同じ文字じゃったな…
+								if (inputIndex + shifted == input.Length)
+								{
+									return true;
+								}
 
-                        filter = 0;
-                        continue;
-                    }
-                }
+								// 違う文字がきたらbreakなのじゃ
+								if (pattern[patternIndex + 1] != input[inputIndex + shifted] && pattern[patternIndex + 1] != Any)
+								{
+									++patternIndex;
+									inputIndex += shifted - 1;
+									break;
+								}
 
-                return false;
-            }
+								// 同じ文字がまだまだ続く
+								if (inputIndex + shifted < input.Length)
+								{
+									continue;
+								}
+							}
 
-            return false;
-        }
+							// ワイルドの次の文字と違う文字の場合は素直にその次へ
+							++shifted;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="format"></param>
-        /// <param name="startIndex"></param>
-        /// <returns></returns>
-        private static bool IsTailAllWild(string format, int startIndex)
-        {
-            for (var i = startIndex; i < format.Length; ++i)
-            {
-                if (format[i] != wild)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
+							// 最後まで違う文字じゃったな…
+							if (inputIndex + shifted == input.Length)
+							{
+								return false;
+							}
+						}
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="input"></param>
-        /// <param name="filter"></param>
-        /// <returns></returns>
-        private static bool Filter(char input, int filter)
-        {
-            var result = (filter & numeric09) > 0 && (input >= '0' && input <= '9');
+						filter = 0;
+						continue;
+					}
+				}
 
-            if ((filter & numeric19) > 0)
-            {
-                result = result || (input >= '1' && input <= '9');
-            }
+				return false;
+			}
 
-            if ((filter & upper) > 0)
-            {
-                result = result || (input >= 'A' && input <= 'Z');
-            }
-                
-            if ((filter & lower) > 0)
-            {
-                result = result || (input >= 'a' && input <= 'z');
-            }
+			return false;
+		}
 
-            return result;
-        }
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="format"></param>
+		/// <param name="startIndex"></param>
+		/// <returns></returns>
+		private static bool IsTailAllWild(string format, int startIndex)
+		{
+			for (int i = startIndex; i < format.Length; ++i)
+			{
+				if (format[i] != Wild)
+				{
+					return false;
+				}
+			}
 
-        #endregion
-    }
+			return true;
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="input"></param>
+		/// <param name="filter"></param>
+		/// <returns></returns>
+		private static bool Filter(char input, int filter)
+		{
+			var result = (filter & Numeric09) > 0 && (input >= '0' && input <= '9');
+
+			if ((filter & Numeric19) > 0)
+			{
+				result = result || (input >= '1' && input <= '9');
+			}
+
+			if ((filter & Upper) > 0)
+			{
+				result = result || (input >= 'A' && input <= 'Z');
+			}
+
+			if ((filter & Lower) > 0)
+			{
+				result = result || (input >= 'a' && input <= 'z');
+			}
+
+			return result;
+		}
+
+		#endregion
+	}
 }

@@ -1,197 +1,209 @@
-﻿using System.Collections;
+using System;
+using System.Collections;
 using System.Linq;
+
+using Config;
+using Config.Scenes;
+
 using UnityEngine;
+
 using Utils.EventManager;
+
 using SceneManagement = UnityEngine.SceneManagement.SceneManager;
 
-/// <summary>
-/// This scene manager use Unity API to load/switch scenes
-/// 
-/// This also provide:
-/// * loading screen (through a simple customizable prefab)
-/// * async scene loading
-/// * additive scene
-/// </summary>
-public class SceneManager
-{
-    private static SceneManager instance = null;
-    public static SceneManager Instance
-    {
-        get
-        {
-            if (instance == null)
-            {
-                instance = new SceneManager();
-            }
-            return instance;
-        }   
-    }
+namespace Utils.Scenes {
 
-    private SceneComponent currentScene;
-    private SceneManagerConfig config;
+	/// <summary>
+	/// This scene manager use Unity API to load/switch scenes
+	/// 
+	/// This also provide:
+	/// * loading screen (through a simple customizable prefab)
+	/// * async scene loading
+	/// * additive scene
+	/// </summary>
+	public class SceneManager
+	{
+		public static SceneManager Instance
+		{
+			get
+			{
+				if (instance == null)
+				{
+					instance = new SceneManager();
+				}
 
-    public SceneManager()
-    {
-        var subscriber = new Subscriber();
-        var currentSceneName = "";
-        GameObject loading = null;
+				return instance;
+			}
+		}
 
-        // Debug
-        subscriber.SubscribeWithTopic(EventTopics.SceneBase, (topic) => Debug.Log($"{this} Received {topic}"));
+		private static SceneManager instance = null;
+		private SceneManagerConfig config;
 
-        // Scene Loaded
-        subscriber.Subscribe(EventTopics.SceneAwake, () => currentSceneName = SceneManagement.GetActiveScene().name);
+		private SceneComponent currentScene;
 
-        // Scene Change
-        subscriber.Subscribe<string>(EventTopics.SceneChange, (triggerName) =>
-        {
-            SceneConfig scene = config.Scenes.FirstOrDefault(x => x.Name.ToLowerInvariant() == currentSceneName.ToLowerInvariant());
-            if (scene == null)
-            {
-                throw new System.Exception($"{this} no configuration for the current scene: {currentSceneName}");
-            }
+		public SceneManager()
+		{
+			var subscriber = new Subscriber();
+			var currentSceneName = "";
+			GameObject loading = null;
 
-            SceneNext next = scene.LinkTo.FirstOrDefault(x => x.TriggerName.ToLowerInvariant() == triggerName.ToLowerInvariant());
-            if (scene == null)
-            {
-                throw new System.Exception($"{this} no configuration for this trigger scene: {currentSceneName}, trigger: {triggerName}");
-            }
+			// Debug
+			subscriber.SubscribeWithTopic(EventTopics.SceneBase, (topic) => Debug.Log($"{this} Received {topic}"));
 
-            SceneConfig nextConfig = config.Scenes.FirstOrDefault(x => x.Name.ToLowerInvariant() == next.SceneName.Name.ToLowerInvariant());
-            if (nextConfig == null)
-            {
-                throw new System.Exception($"{this} no configuration for this scene: {next.SceneName.Name}");
-            }
+			// Scene Loaded
+			subscriber.Subscribe(EventTopics.SceneAwake, () => currentSceneName = SceneManagement.GetActiveScene().name);
 
-            if (nextConfig.Async)
-            {
-                SceneManagement.LoadSceneAsync(next.SceneName.Name, UnityEngine.SceneManagement.LoadSceneMode.Single);
-            }
-            else
-            {
-                SceneManagement.LoadScene(next.SceneName.Name);
-            }
-        });
+			// Scene Change
+			subscriber.Subscribe<string>(EventTopics.SceneChange, (triggerName) =>
+			{
+				SceneConfig scene = config.Scenes.FirstOrDefault(x => String.Equals(x.Name, currentSceneName, StringComparison.InvariantCultureIgnoreCase));
+				if (scene == null)
+				{
+					throw new Exception($"{this} no configuration for the current scene: {currentSceneName}");
+				}
 
-        // Scene Loading
-        subscriber.Subscribe(EventTopics.SceneLoading, () =>
-        {
-            loading = GameObject.Instantiate(config.LoadingPrefab);
-            loading.GetComponent<CanvasGroup>().alpha = 1;
-        });
+				SceneNext next = scene.LinkTo.FirstOrDefault(x => String.Equals(x.TriggerName, triggerName, StringComparison.InvariantCultureIgnoreCase));
+				if (next == null)
+				{
+					throw new Exception($"{this} no configuration for this trigger scene: {currentSceneName}, trigger: {triggerName}");
+				}
 
-        subscriber.Subscribe(EventTopics.SceneLoaded, () =>
-        {
-            loading.GetComponent<CanvasGroup>().alpha = 0;
-            GameObject.Destroy(loading);
-            loading = null;
-        });
+				SceneConfig nextConfig = config.Scenes.FirstOrDefault(x => String.Equals(x.Name, next.SceneName.Name, StringComparison.InvariantCultureIgnoreCase));
+				if (nextConfig == null)
+				{
+					throw new Exception($"{this} no configuration for this scene: {next.SceneName.Name}");
+				}
 
-        // Additive Scene
-        subscriber.Subscribe<string>(EventTopics.SceneLoadAdditive, (name) =>
-        {
-            SceneConfig scene = config.Scenes.FirstOrDefault(x => x.Name.ToLowerInvariant() == currentSceneName.ToLowerInvariant());
-            if (scene == null)
-            {
-                throw new System.Exception($"{this} no configuration for the current scene: {currentSceneName}");
-            }
+				if (nextConfig.Async)
+				{
+					SceneManagement.LoadSceneAsync(next.SceneName.Name, UnityEngine.SceneManagement.LoadSceneMode.Single);
+				}
+				else
+				{
+					SceneManagement.LoadScene(next.SceneName.Name);
+				}
+			});
 
-            SceneAdditiveConfig additive = scene.Additives.FirstOrDefault(x => x.Name.ToLowerInvariant() == name.ToLowerInvariant());
-            if (scene == null)
-            {
-                throw new System.Exception($"{this} no configuration for this additive scene: {currentSceneName}, additive: {name}");
-            }
+			// Scene Loading
+			subscriber.Subscribe(EventTopics.SceneLoading, () =>
+			{
+				loading = GameObject.Instantiate(config.LoadingPrefab);
+				loading.GetComponent<CanvasGroup>().alpha = 1;
+			});
 
-            currentScene.StartCoroutine(LoadAdditiveScene(additive.Name));
-        });
+			subscriber.Subscribe(EventTopics.SceneLoaded, () =>
+			{
+				loading.GetComponent<CanvasGroup>().alpha = 0;
+				GameObject.Destroy(loading);
+				loading = null;
+			});
 
-        subscriber.Subscribe<string>(EventTopics.SceneLoadAdditiveAwake, (name) =>
-        {
-            // if the additive scene is opened directly
-            if (currentScene == null)
-            {
-                return;
-            }
+			// Additive Scene
+			subscriber.Subscribe<string>(EventTopics.SceneLoadAdditive, (name) =>
+			{
+				SceneConfig scene = config.Scenes.FirstOrDefault(x => x.Name.ToLowerInvariant() == currentSceneName.ToLowerInvariant());
+				if (scene == null)
+				{
+					throw new Exception($"{this} no configuration for the current scene: {currentSceneName}");
+				}
 
-            SceneConfig scene = config.Scenes.FirstOrDefault(x => x.Name.ToLowerInvariant() == currentSceneName.ToLowerInvariant());
-            if (scene == null)
-            {
-                throw new System.Exception($"{this} no configuration for the current scene: {currentSceneName}");
-            }
+				SceneAdditiveConfig additive = scene.Additives.FirstOrDefault(x => x.Name.ToLowerInvariant() == name.ToLowerInvariant());
+				if (additive == null)
+				{
+					throw new Exception($"{this} no configuration for this additive scene: {currentSceneName}, additive: {name}");
+				}
 
-            SceneAdditiveConfig additive = scene.Additives.FirstOrDefault(x => x.Name.ToLowerInvariant() == name.ToLowerInvariant());
-            if (scene == null)
-            {
-                throw new System.Exception($"{this} no configuration for this additive scene: {currentSceneName}, additive: {name}");
-            }
+				currentScene.StartCoroutine(LoadAdditiveScene(additive.Name));
+			});
 
-            if (additive.ActiveOnLoad)
-            {
-                SceneManagement.SetActiveScene(SceneManagement.GetSceneByName(additive.Name));
-            }
-        });
-    }
+			subscriber.Subscribe<string>(EventTopics.SceneLoadAdditiveAwake, (name) =>
+			{
+				// if the additive scene is opened directly
+				if (currentScene == null)
+				{
+					return;
+				}
 
-    public void Initialize(SceneComponent component)
-    {
-        currentScene = component;
-        if (config != null)
-        {
-            return;
-        }
-        
-        config = Resources.Load<SceneManagerConfig>("SceneManagerConfig");
-        if (config == null)
-        {
-            throw new System.Exception($"{this} Cant load scene manager config from Resources/SceneManagerConfig");
-        }
-    }
+				SceneConfig scene = config.Scenes.FirstOrDefault(x => x.Name.ToLowerInvariant() == currentSceneName.ToLowerInvariant());
+				if (scene == null)
+				{
+					throw new Exception($"{this} no configuration for the current scene: {currentSceneName}");
+				}
 
-    public void Initialize(AdditiveSceneComponent component)
-    {
-        if (config != null)
-        {
-            return;
-        }
+				SceneAdditiveConfig additive = scene.Additives.FirstOrDefault(x => x.Name.ToLowerInvariant() == name.ToLowerInvariant());
+				if (additive == null)
+				{
+					throw new Exception($"{this} no configuration for this additive scene: {currentSceneName}, additive: {name}");
+				}
 
-        config = Resources.Load<SceneManagerConfig>("SceneManagerConfig");
-        if (config == null)
-        {
-            throw new System.Exception($"{this} Cant load scene manager config from Resources/SceneManagerConfig");
-        }
+				if (additive.ActiveOnLoad)
+				{
+					SceneManagement.SetActiveScene(SceneManagement.GetSceneByName(additive.Name));
+				}
+			});
+		}
 
-        var parentSceneName = component.Config.SceneParent.Name;
+		public void Initialize(SceneComponent component)
+		{
+			currentScene = component;
+			if (config != null)
+			{
+				return;
+			}
 
-        SceneConfig scene = config.Scenes.FirstOrDefault(x => x.Name.ToLowerInvariant() == parentSceneName.ToLowerInvariant());
-        if (scene == null)
-        {
-            throw new System.Exception($"{this} no configuration for the current scene: {parentSceneName}");
-        }
+			config = Resources.Load<SceneManagerConfig>("SceneManagerConfig");
+			if (config == null)
+			{
+				throw new Exception($"{this} Cant load scene manager config from Resources/SceneManagerConfig");
+			}
+		}
 
-        if (scene.Async)
-        {
-            SceneManagement.LoadSceneAsync(scene.Name, UnityEngine.SceneManagement.LoadSceneMode.Single);
-        }
-        else
-        {
-            SceneManagement.LoadScene(scene.Name);
-        }
-    }
+		public void Initialize(AdditiveSceneComponent component)
+		{
+			if (config != null)
+			{
+				return;
+			}
 
-    private IEnumerator LoadAdditiveScene(string scene)
-    {
-        AsyncOperation async = SceneManagement.LoadSceneAsync(scene, UnityEngine.SceneManagement.LoadSceneMode.Additive);
+			config = Resources.Load<SceneManagerConfig>("SceneManagerConfig");
+			if (config == null)
+			{
+				throw new Exception($"{this} Cant load scene manager config from Resources/SceneManagerConfig");
+			}
 
-        while (!async.isDone)
-        {
-            yield return null;
-        }
+			string parentSceneName = component.Config.SceneParent.Name;
 
-        Publisher.Publish(EventTopics.SceneLoadAdditiveLoaded, scene);
-    }
+			SceneConfig scene = config.Scenes.FirstOrDefault(x => x.Name.ToLowerInvariant() == parentSceneName.ToLowerInvariant());
+			if (scene == null)
+			{
+				throw new Exception($"{this} no configuration for the current scene: {parentSceneName}");
+			}
 
-    public override string ToString()
-    {
-        return "[SceneManager]";
-    }
+			if (scene.Async)
+			{
+				SceneManagement.LoadSceneAsync(scene.Name, UnityEngine.SceneManagement.LoadSceneMode.Single);
+			}
+			else
+			{
+				SceneManagement.LoadScene(scene.Name);
+			}
+		}
+
+		private IEnumerator LoadAdditiveScene(string scene)
+		{
+			AsyncOperation async = SceneManagement.LoadSceneAsync(scene, UnityEngine.SceneManagement.LoadSceneMode.Additive);
+
+			while (!async.isDone)
+			{
+				yield return null;
+			}
+
+			Publisher.Publish(EventTopics.SceneLoadAdditiveLoaded, scene);
+		}
+
+		public override string ToString()
+		{
+			return "[SceneManager]";
+		}
+	}
 }

@@ -1,38 +1,43 @@
-﻿using UnityEngine;
+using Scenes.Game.Characters;
+
+using UnityEngine;
 using UnityEngine.AI;
 
-public class InputController : MonoBehaviour
-{
-    public CharacterComponent Character { get; private set; }
-    private NavMeshHit hit;
-    private RaycastHit raycastHit;
+namespace Scenes.Game.InputControllers {
+	public class InputController : MonoBehaviour
+	{
+		public CharacterComponent Character { get; private set; }
+		private RaycastHit raycastHit;
 
-    void Start()
-    {
-        Character = GetComponent<CharacterComponent>();
-    }
+		private void Start()
+		{
+			Character = GetComponent<CharacterComponent>();
+		}
 
-    void Update()
-    {
-        var direction = new Vector3(-Input.GetAxis("Horizontal"), 0, -Input.GetAxis("Vertical"));
+		private void Update()
+		{
+			var direction = new Vector3(-Input.GetAxis("Horizontal"), 0, -Input.GetAxis("Vertical"));
 
-        var destination = transform.position + direction * Time.deltaTime * 20f;
-        var blocked = NavMesh.Raycast(transform.position, destination, out hit, NavMesh.AllAreas);
-        GetComponent<NavMeshAgent>().Move(direction * Time.deltaTime * 15f);
-        
-        var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out raycastHit))
-        {
-            var dest = new Vector3(raycastHit.point.x, transform.position.y, raycastHit.point.z);
-            if ((transform.position - dest).magnitude > 1.5f)
-            {
-                transform.LookAt(dest);
-            }
-        }
+			// move
+			Vector3 destination = direction * Time.deltaTime * 15f;
+			GetComponent<NavMeshAgent>().Move(destination);
 
-        if (Input.GetButtonDown("Fire1"))
-        {
-            Character.Shoot();
-        }
-    }
+			// rotation
+			Ray ray = UnityEngine.Camera.main.ScreenPointToRay(Input.mousePosition);
+			if (Physics.Raycast(ray, out raycastHit))
+			{
+				var dest = new Vector3(raycastHit.point.x, transform.position.y, raycastHit.point.z);
+				if ((transform.position - dest).magnitude > 1.5f)
+				{
+					transform.LookAt(dest);
+				}
+			}
+
+			// shoot
+			if (Input.GetButtonDown("Fire1"))
+			{
+				Character.Shoot();
+			}
+		}
+	}
 }

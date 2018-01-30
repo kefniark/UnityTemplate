@@ -1,13 +1,9 @@
 using UnityEngine;
 
-namespace Utils.EventManager.Extensions
+using Utils.EventManager;
+
+[DisallowMultipleComponent]
+public class PublisherGameObject : MonoBehaviour
 {
-	[DisallowMultipleComponent]
-	public class PublisherGameObject : MonoBehaviour
-	{
-		public void Publish(string topic)
-		{
-			Publisher.Publish(topic);
-		}
-	}
+	public void Publish(string topic) => Publisher.Publish(topic);
 }

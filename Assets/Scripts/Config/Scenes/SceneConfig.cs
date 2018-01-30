@@ -1,18 +1,21 @@
-﻿using System;
+using System;
+
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Config/Scene/Add Scene")]
-public class SceneConfig : ScriptableObject
-{
-    public string Name = "Scene";
-    public bool Async = true;
-    public SceneNext[] LinkTo;
-    public SceneAdditiveConfig[] Additives;
-}
+namespace Config.Scenes {
+	[CreateAssetMenu(menuName = "Config/Scene/Add Scene")]
+	public class SceneConfig : ScriptableObject
+	{
+		public SceneAdditiveConfig[] Additives;
+		public bool Async = true;
+		public SceneNext[] LinkTo;
+		public string Name = "Scene";
+	}
 
-[Serializable]
-public class SceneNext
-{
-    public string TriggerName;
-    public SceneConfig SceneName;
+	[Serializable]
+	public class SceneNext
+	{
+		public SceneConfig SceneName;
+		public string TriggerName;
+	}
 }

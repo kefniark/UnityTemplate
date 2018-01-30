@@ -51,7 +51,7 @@ ModelImporter:
   meshes:
     lODScreenPercentages: []
     globalScale: 1
-    meshCompression: 3
+    meshCompression: 0
     addColliders: 1
     importVisibility: 1
     importBlendShapes: 1
@@ -60,7 +60,7 @@ ModelImporter:
     swapUVChannels: 0
     generateSecondaryUV: 1
     useFileUnits: 1
-    optimizeMeshForGPU: 1
+    optimizeMeshForGPU: 0
     keepQuads: 0
     weldVertices: 1
     preserveHierarchy: 0

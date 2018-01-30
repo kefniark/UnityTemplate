@@ -1,28 +1,37 @@
-﻿using UnityEngine;
-using Utils.EventManager.Extensions;
+using Config;
 
-public class CameraFollow : MonoBehaviour
-{
-    private CharacterComponent target;
-    private Vector3 OriginalPosition;
+using Scenes.Game.Characters;
 
-    void Start()
-    {
-        OriginalPosition = transform.position;
-        this.Subscribe<CharacterComponent>(EventTopics.GameCharacterSpawn, (character) =>
-        {
-            if (!character.IsPlayer) return;
-            target = character;
-        });
-    }
+using UnityEngine;
 
-    private void Update()
-    {
-        if (target == null)
-        {
-            return;
-        }
+namespace Scenes.Game.Camera {
+	public class CameraFollow : MonoBehaviour
+	{
+		private Vector3 originalPosition;
+		private CharacterComponent target;
 
-        transform.position = target.transform.position + OriginalPosition;
-    }
+		private void Start()
+		{
+			originalPosition = transform.position;
+			this.Subscribe<CharacterComponent>(EventTopics.GameCharacterSpawn, (character) =>
+			{
+				if (!character.IsPlayer)
+				{
+					return;
+				}
+
+				target = character;
+			});
+		}
+
+		private void Update()
+		{
+			if (target == null)
+			{
+				return;
+			}
+
+			transform.position = target.transform.position + originalPosition;
+		}
+	}
 }
