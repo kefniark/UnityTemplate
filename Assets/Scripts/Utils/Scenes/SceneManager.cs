@@ -47,9 +47,6 @@ namespace Utils.Scenes {
 			var currentSceneName = "";
 			GameObject loading = null;
 
-			// Debug
-			subscriber.SubscribeWithTopic(EventTopics.SceneBase, (topic) => Debug.Log($"{this} Received {topic}"));
-
 			// Scene Loaded
 			subscriber.Subscribe(EventTopics.SceneAwake, () => currentSceneName = SceneManagement.GetActiveScene().name);
 

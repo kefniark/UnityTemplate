@@ -18,10 +18,15 @@ namespace Utils.StateMachine
 
 		public T Entity { get; private set; }
 
-		// events
-		public event EventHandler Entered;
+		// transition
+		public bool SkipEnterTransition { get; protected set; } = false;
+		public bool SkipExitTransition { get; protected set; } = false;
 
-		public event EventHandler Exited;
+		// events
+		public event EventHandler StateEnter;
+		public event EventHandler StateEntered;
+		public event EventHandler StateExit;
+		public event EventHandler StateExited;
 
 		/// <summary>
 		/// Used by the stateMachine to setup this state
@@ -42,7 +47,19 @@ namespace Utils.StateMachine
 		public virtual void Enter()
 		{
 			IsActive = true;
-			Entered?.Invoke(this, EventArgs.Empty);
+			StateEnter?.Invoke(this, EventArgs.Empty);
+			if (!SkipEnterTransition)
+			{
+				EnterFinish();
+			}
+		}
+
+		/// <summary>
+		/// Enter state
+		/// </summary>
+		public void EnterFinish()
+		{
+			StateEntered?.Invoke(this, EventArgs.Empty);
 		}
 
 		/// <summary>
@@ -51,7 +68,19 @@ namespace Utils.StateMachine
 		public void Exit()
 		{
 			IsActive = false;
-			Exited?.Invoke(this, EventArgs.Empty);
+			StateExit?.Invoke(this, EventArgs.Empty);
+			if (!SkipExitTransition)
+			{
+				ExitFinish();
+			}
+		}
+
+		/// <summary>
+		/// Exit state
+		/// </summary>
+		public void ExitFinish()
+		{
+			StateExited?.Invoke(this, EventArgs.Empty);
 		}
 
 		public override string ToString() => StateMachine == null ? "[State]" : $"[State of {StateMachine.Parent} : {Id} - {IsActive}]";

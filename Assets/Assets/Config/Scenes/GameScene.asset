@@ -11,11 +11,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53502c85cfa7324459fe239c1b83fded, type: 3}
   m_Name: GameScene
   m_EditorClassIdentifier: 
-  Name: Game
-  Async: 1
-  LinkTo:
-  - TriggerName: next
-    SceneName: {fileID: 11400000, guid: 366cfe48b5261c54d820cf3d83986572, type: 2}
   Additives:
   - {fileID: 11400000, guid: 003255d1abdb9754e8dd0fa0b5fe2155, type: 2}
   - {fileID: 11400000, guid: 8dd729b359fa1874da97f9ac68339b54, type: 2}
+  Async: 1
+  LinkTo:
+  - SceneName: {fileID: 11400000, guid: 6e86dd4c534429345ab524607a7a1edd, type: 2}
+    TriggerName: next
+  Name: Game

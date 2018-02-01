@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using UnityEditorInternal;
+
 namespace Utils.StateMachine
 {
 	/// <summary>
@@ -20,6 +22,8 @@ namespace Utils.StateMachine
 
 		public State<K, T> Previous { get; private set; }
 		public readonly T Parent;
+
+		private State<K, T> next;
 
 		public StateMachine(T parent)
 		{
@@ -65,6 +69,10 @@ namespace Utils.StateMachine
 			ChangeState(States[id]);
 		}
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="state"></param>
 		private void ChangeState(State<K, T> state)
 		{
 			if (state == Current)
@@ -76,8 +84,10 @@ namespace Utils.StateMachine
 			// exit previous state
 			if (Current != null)
 			{
+				next = state;
+				Current.StateExited += Current_StateExited;
 				Current.Exit();
-				Previous = Current;
+				return;
 			}
 
 			// switch to new state
@@ -86,6 +96,20 @@ namespace Utils.StateMachine
 			// event
 			StateChanged?.Invoke(this, new StateChangeEventArgs<K, T>(Current, Previous));
 
+			Current.Enter();
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
+		private void Current_StateExited(object sender, EventArgs e)
+		{
+			Current.StateExited -= Current_StateExited;
+			Previous = Current;
+			Current = next;
+			StateChanged?.Invoke(this, new StateChangeEventArgs<K, T>(Current, Previous));
 			Current.Enter();
 		}
 

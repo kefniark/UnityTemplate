@@ -12,7 +12,7 @@ namespace Utils.Scenes {
 	/// </summary>
 	public abstract class SceneComponent : MonoBehaviour
 	{
-		public virtual void Awake()
+		protected virtual void Awake()
 		{
 			SceneManager.Instance.Initialize(this);
 			Publisher.Publish(EventTopics.SceneAwake);
