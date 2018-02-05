@@ -36,7 +36,7 @@ namespace Scenes.Game.Components.Objectives {
 				if (last != null)
 				{
 					Debug.Log($"Last Character Get Point {last.Player}");
-					last.Player.IncrementScore();
+					last.Player.IncrementScore(2);
 				}
 
 				ObjectiveComplete();

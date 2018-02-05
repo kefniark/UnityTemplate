@@ -6,6 +6,8 @@ using System.Linq;
 using Config;
 using Config.Characters;
 
+using DG.Tweening;
+
 using Scenes.Game.Components;
 using Scenes.Game.Components.Characters;
 using Scenes.Game.Components.Objectives;
@@ -13,6 +15,7 @@ using Scenes.Game.States;
 
 using UnityEngine;
 
+using Utils.ObjectPooling;
 using Utils.Scenes;
 using Utils.StateMachine;
 
@@ -25,8 +28,8 @@ namespace Scenes.Game
 		public StateMachine<GameStates, GameView> States;
 
 		private LevelComponent level;
-		private ObjectiveManager GameObjectiveManager;
-		private ObjectiveManager RoundObjectiveManager;
+		private ObjectiveManager gameObjectiveManager;
+		private ObjectiveManager roundObjectiveManager;
 		private readonly List<PlayerData> players = new List<PlayerData>();
 
 		public void ClickButton() => LoadNextScene();
@@ -39,30 +42,30 @@ namespace Scenes.Game
 			DebugSetup();
 			InitGameStates();
 
+			// First to score 5 -> win the match
+			gameObjectiveManager = new ObjectiveManager();
+			gameObjectiveManager.Add(new ObjectiveGameFinish(10));
+			gameObjectiveManager.Completed += (sender, args) => States.ChangeState(GameStates.GameResult);
+		}
+
+		public IEnumerator Start()
+		{
 			// Create players
 			for (var i = 1; i <= 4; i++)
 			{
 				players.Add(new PlayerData("Player " + i, i, i == 1));
 			}
 
-			// First to score 5 -> win the match
-			GameObjectiveManager = new ObjectiveManager();
-			GameObjectiveManager.Add(new ObjectiveGameFinish(5));
-			GameObjectiveManager.Completed += (sender, args) => States.ChangeState(GameStates.GameResult);
-		}
-
-		public IEnumerator Start()
-		{
 			LoadAdditiveScene("Level1");
 			yield return this.WaitForMessage(EventTopics.SceneLoadAdditiveLoaded);
 
 			level = FindObjectOfType<LevelComponent>();
 			if (level == null)
 			{
-				throw new System.Exception($"{this} cant find a level component");
+				throw new Exception($"{this} cant find a level component");
 			}
 
-			level.Setup(CharacterFactory);
+			level.Setup(CharacterFactory, GetComponent<PoolComponent>());
 
 			States.ChangeState(GameStates.Intro);
 		}
@@ -72,6 +75,7 @@ namespace Scenes.Game
 			this.SubscribeWithTopic(EventTopics.SceneBase, (topic) => Debug.Log($"[Debug] Scene: {topic}"));
 			this.SubscribeWithTopic(EventTopics.GamePlayerBase, (topic) => Debug.Log($"[Debug] Player: {topic}"));
 			this.SubscribeWithTopic(EventTopics.GameCharacterBase, (topic) => Debug.Log($"[Debug] Character: {topic}"));
+			//this.SubscribeWithTopic(EventTopics.GameBulletBase, (topic) => Debug.Log($"[Debug] Bullet: {topic}"));
 			this.SubscribeWithTopic(EventTopics.GameStateBase, (topic) => Debug.Log($"[Debug] Game States: {topic}"));
 			this.SubscribeWithTopic(EventTopics.GameObjectiveBase, (topic) => Debug.Log($"[Debug] Objective: {topic}"));
 		}
@@ -95,8 +99,8 @@ namespace Scenes.Game
 
 			// Time
 			Time.timeScale = 0;
-			States.States[GameStates.Run].StateEnter += (sender, arg) => Time.timeScale = 1;
-			States.States[GameStates.Run].StateExit += (sender, arg) => Time.timeScale = 0;
+			States.States[GameStates.Run].StateEnter += (sender, arg) => DOTween.To(() => Time.timeScale, x => Time.timeScale = x, 1, 1f).SetEase(Ease.InOutQuad).SetUpdate(true);
+			States.States[GameStates.Run].StateExit += (sender, arg) => DOTween.To(() => Time.timeScale, x => Time.timeScale = x, 0, 1f).SetEase(Ease.InOutQuad).SetUpdate(true);
 
 			// Animated Transition
 			(States.States[GameStates.Pause] as GameState)?.SetEnterTransitionAuto(false);
@@ -118,11 +122,11 @@ namespace Scenes.Game
 			level.CleanRound();
 
 			// Create round objectives (60s timeout or kill everyone)
-			RoundObjectiveManager = new ObjectiveManager();
-			RoundObjectiveManager.Add(new ObjectiveTimer(60));
-			RoundObjectiveManager.Add(new ObjectiveRoundFinish());
-			RoundObjectiveManager.Completed += FinishRound;
-			RoundObjectiveManager.Failed += FinishRound;
+			roundObjectiveManager = new ObjectiveManager();
+			roundObjectiveManager.Add(new ObjectiveTimer(60));
+			roundObjectiveManager.Add(new ObjectiveRoundFinish());
+			roundObjectiveManager.Completed += FinishRound;
+			roundObjectiveManager.Failed += FinishRound;
 
 			level.InitRound(players.ToList());
 		}
@@ -133,6 +137,7 @@ namespace Scenes.Game
 			{
 				return;
 			}
+
 			States.ChangeState(GameStates.RoundResult);
 		}
 
@@ -142,8 +147,8 @@ namespace Scenes.Game
 			{
 				return;
 			}
-			GameObjectiveManager?.Update(Time.deltaTime);
-			RoundObjectiveManager?.Update(Time.deltaTime);
+			gameObjectiveManager?.Update(Time.deltaTime);
+			roundObjectiveManager?.Update(Time.deltaTime);
 		}
 	}
 }

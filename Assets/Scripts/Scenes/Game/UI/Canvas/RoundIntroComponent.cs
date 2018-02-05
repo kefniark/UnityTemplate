@@ -9,10 +9,10 @@ using UnityEngine.UI;
 
 namespace Scenes.Game.UI
 {
-	public class RoundResultComponent : MonoBehaviour
+	public class RoundIntroComponent : MonoBehaviour
 	{
 		private CanvasGroup canvas;
-		private int Round = 1;
+		private int round = 1;
 
 		public void Awake()
 		{
@@ -20,26 +20,28 @@ namespace Scenes.Game.UI
 			canvas.alpha = 0;
 			gameObject.SetActive(false);
 
-			this.Subscribe(string.Format(EventTopics.GameStateEnter, GameStates.RoundResult.ToString()), () =>
+			this.Subscribe(string.Format(EventTopics.GameStateEnter, GameStates.RoundIntro.ToString()), () =>
 			{
+				GetComponentInChildren<Text>().text = $"Round {round}";
 				canvas.alpha = 1;
 				gameObject.SetActive(true);
 			});
 
-			this.Subscribe(string.Format(EventTopics.GameStateExited, GameStates.RoundResult.ToString()), () =>
+			this.Subscribe(string.Format(EventTopics.GameStateExited, GameStates.RoundIntro.ToString()), () =>
 			{
 				canvas.alpha = 0;
 				gameObject.SetActive(false);
-				Round += 1;
+				round += 1;
 			});
 
-			this.Subscribe<GameStateTransition>(string.Format(EventTopics.GameStateEntered, GameStates.RoundResult.ToString()), OnRoundIntroBegan);
+			this.Subscribe<GameStateTransition>(string.Format(EventTopics.GameStateEntered, GameStates.RoundIntro.ToString()), OnRoundIntroBegan);
 		}
 
 		private void OnRoundIntroBegan(GameStateTransition state)
 		{
 			// Get Component
 			var text = GetComponentInChildren<Text>();
+			text.rectTransform.anchoredPosition = new Vector2(800, 0);
 			var textRect = text.GetComponent<RectTransform>();
 
 			// Animation sequence

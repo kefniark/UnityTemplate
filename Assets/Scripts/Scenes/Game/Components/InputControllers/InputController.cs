@@ -16,11 +16,17 @@ namespace Scenes.Game.Components.InputControllers {
 
 		private void Update()
 		{
+			if (Time.timeScale <= 0)
+			{
+				return;
+			}
 			var direction = new Vector3(-Input.GetAxis("Horizontal"), 0, -Input.GetAxis("Vertical"));
+			Quaternion vector = Quaternion.AngleAxis(-45, Vector3.up);
 
 			// move
 			Vector3 destination = direction * Time.deltaTime * 15f;
-			GetComponent<NavMeshAgent>().Move(destination);
+			//transform.Translate(vector * destination, Space.World);
+			GetComponent<NavMeshAgent>().Move(vector * destination);
 
 			// rotation
 			Ray ray = UnityEngine.Camera.main.ScreenPointToRay(Input.mousePosition);

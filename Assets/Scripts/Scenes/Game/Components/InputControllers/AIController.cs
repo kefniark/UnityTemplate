@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.AI;
 
 namespace Scenes.Game.Components.InputControllers {
-	public class AIController : MonoBehaviour
+	public class AiController : MonoBehaviour
 	{
 		public CharacterComponent Character { get; private set; }
 		private NavMeshHit hit;
@@ -25,6 +25,11 @@ namespace Scenes.Game.Components.InputControllers {
 		// Update is called once per frame
 		private void Update()
 		{
+			if (Time.timeScale <= 0)
+			{
+				return;
+			}
+
 			if (Target == null)
 			{
 				SearchForTarget();

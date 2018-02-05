@@ -31,7 +31,7 @@ namespace Scenes.Game.UI
 		{
 			state = obj;
 			gameObject.SetActive(true);
-			canvas.DOFade(1, 0.4f).SetUpdate(UpdateType.Normal, true).OnComplete(obj.EnterFinish);
+			canvas.DOFade(1, 1f).SetDelay(0.5f).SetUpdate(UpdateType.Normal, true).OnComplete(obj.EnterFinish);
 		}
 
 		private void OnResultExit(GameStateTransition obj) => canvas.DOFade(0, 0.4f).SetUpdate(UpdateType.Normal, true).OnComplete(() =>

@@ -35,6 +35,12 @@ namespace Config {
 		public const string GameCharacterSpawn = "game.character.spawn";
 		public const string GameCharacterDeath = "game.character.death";
 
+		// Bullets
+		public const string GameBulletBase = "game.bullet.*";
+		public const string GameBulletShoot = "game.bullet.shoot";
+		public const string GameBulletHitCharacter = "game.bullet.hitcharacter";
+		public const string GameBulletHitWall = "game.bullet.hitwall";
+
 		// Objectives
 		public const string GameObjectiveBase = "game.objective.*";
 		public const string GameObjectiveCreated = "game.objective.created";

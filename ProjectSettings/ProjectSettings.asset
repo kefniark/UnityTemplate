@@ -632,7 +632,7 @@ PlayerSettings:
       daydreamIconBackground: {fileID: 0}
   cloudServicesEnabled: {}
   facebookSdkVersion: 7.9.4
-  apiCompatibilityLevel: 2
+  apiCompatibilityLevel: 3
   cloudProjectId: e214dc13-fadd-4364-8f23-2982b2b85bb4
   projectName: Publisher
   organizationId: kevin-destrem

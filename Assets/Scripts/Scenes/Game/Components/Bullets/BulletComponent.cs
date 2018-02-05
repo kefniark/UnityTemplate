@@ -1,20 +1,24 @@
+using Config;
+
+using Scenes.Game.Components.Characters;
+
 using UnityEngine;
 
-namespace Scenes.Game.Components.Characters {
+namespace Scenes.Game.Components.Bullets {
 	public class BulletComponent : MonoBehaviour
 	{
-		public CharacterComponent Source;
+		public CharacterComponent Source { get; private set; }
 		public Vector3 Origin;
 		public Vector3 Direction;
 		public float Speed = 10f;
-		private int life = 4;
+		private int life = 2;
 
 		public void Setup(CharacterComponent source, Vector3 direction)
 		{
 			Source = source;
 			Direction = direction;
 			Origin = transform.position;
-			Destroy(gameObject, 3);
+			life = 2;
 		}
 
 		private void Update()
@@ -27,13 +31,7 @@ namespace Scenes.Game.Components.Characters {
 			var character = other.gameObject.GetComponent<CharacterComponent>();
 			if (character != null)
 			{
-				character.Hit();
-				if (character.Health <= 0 && Source != null)
-				{
-					Source.Player.IncrementScore((Source == character) ? -1 : 1);
-				}
-
-				Destroy(gameObject);
+				this.Publish(EventTopics.GameBulletHitCharacter, this, character);
 				return;
 			}
 
@@ -52,7 +50,7 @@ namespace Scenes.Game.Components.Characters {
 
 			if (life <= 0)
 			{
-				GameObject.Destroy(gameObject);
+				this.Publish(EventTopics.GameBulletHitWall, this);
 			}
 		}
 	}
