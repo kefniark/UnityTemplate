@@ -9,6 +9,7 @@ using UnityEngine;
 
 using Utils.EventManager;
 
+using Object = UnityEngine.Object;
 using SceneManagement = UnityEngine.SceneManagement.SceneManager;
 
 namespace Utils.Scenes {
@@ -84,14 +85,14 @@ namespace Utils.Scenes {
 			// Scene Loading
 			subscriber.Subscribe(EventTopics.SceneLoading, () =>
 			{
-				loading = GameObject.Instantiate(config.LoadingPrefab);
+				loading = Object.Instantiate(config.LoadingPrefab);
 				loading.GetComponent<CanvasGroup>().alpha = 1;
 			});
 
 			subscriber.Subscribe(EventTopics.SceneLoaded, () =>
 			{
 				loading.GetComponent<CanvasGroup>().alpha = 0;
-				GameObject.Destroy(loading);
+				Object.Destroy(loading);
 				loading = null;
 			});
 

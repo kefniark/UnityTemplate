@@ -64,9 +64,13 @@ namespace Scenes.Game.Components {
 			{
 				bullet.Source.Player.IncrementScore((bullet.Source == character) ? -1 : 1);
 
-				GameObject go = PrefabFactory.Pop("bulletexplode");
-				go.transform.position = bullet.transform.position;
-				this.DelayAction(8, () => PrefabFactory.Push("bulletexplode", go));
+				//GameObject go = PrefabFactory.Pop("bulletexplode");
+				//go.transform.position = bullet.transform.position;
+				//this.DelayAction(8, () => PrefabFactory.Push("bulletexplode", go));
+
+				GameObject explode = PrefabFactory.Pop("vfxexplode");
+				explode.transform.position = bullet.transform.position + (UnityEngine.Camera.main.transform.position - bullet.transform.position).normalized;
+				this.DelayAction(5, () => PrefabFactory.Push("vfxexplode", explode));
 
 				GameObject shock = PrefabFactory.Pop("shockwave");
 				shock.transform.position = bullet.transform.position;

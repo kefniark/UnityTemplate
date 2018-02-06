@@ -777,6 +777,10 @@ MonoBehaviour:
     Prefab: {fileID: 1337246433364112, guid: 3932844a547e74e43a5cd577dcc3373f, type: 2}
     StartAmount: 1
     Prewarm: 0
+  - Id: vfxexplode
+    Prefab: {fileID: 1958093613137394, guid: 64c310cacd2f4684ab394dccc6ced0a3, type: 2}
+    StartAmount: 10
+    Prewarm: 1
 --- !u!82 &1576458959
 AudioSource:
   m_ObjectHideFlags: 0
